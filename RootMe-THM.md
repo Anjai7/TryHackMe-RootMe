@@ -1,45 +1,141 @@
-Target : 10.201.64.74
-Enumeration
-normal nmap scan 
-![[Pasted image 20250806203408.png]]
-lets also do more recon and find services version etc
-in the mean time lets visit the web page
-![[Pasted image 20250806203652.png]]
-lets run a gobuster directory finder
-while gobuster is running we got the result of sevice scan in nmap
-![[Pasted image 20250806203758.png]]
-checking if it is running any service with outdated version or vulnerabilty
-![[Pasted image 20250806212418.png]]
-by the time vulnerability sacn is finished i found somethin intresting directory in gobuster
-![[Pasted image 20250806212549.png]]
-gone ahead visited these and found the uploads,panel intresting
-panel
-![[Pasted image 20250806212758.png]]
-upload
-![[Pasted image 20250806212845.png]]
-(these screenshots are taken after testing many things and expoiting)
-in these we can upload files in the panel and view can view them in uploads
-the hint from TryHackMe gives us a hint that it has something to do with PHP reverse shell and also we need to bypass file upload sanitation
-![[Pasted image 20250806213258.png]]
-https://www.revshells.com/
-i used this online reverse shell generator to generate reverse shell
-after trying the php reverse shell one by one the 2nd php reverse shell of pentest mokeys worked
-and running a netcat listener we get a reverse shell
-but it ain't a root shell 
-we need to get root privilage
-there is a hint in the the room
-![[Pasted image 20250806213741.png]]
-well it just fetches the file that has SUID bit set 
-![[Pasted image 20250806213940.png]]
-we can see if something will give us privilage escalation through this page
-https://gtfobins.github.io/
-in this we see there is python
-![[Pasted image 20250806214132.png]]
-well i tried this but didn't work
-then i asked chatgpt and he gave me this 
+# Penetration Testing Report - Target 10.201.64.74
+
+## Executive Summary
+
+This report documents the complete penetration testing process of target system 10.201.64.74, from initial reconnaissance through privilege escalation to root access. The exploitation involved bypassing file upload restrictions, deploying a PHP reverse shell, and escalating privileges using SUID binaries.
+
+## Target Information
+
+- **Target IP**: 10.201.64.74
+- **Testing Platform**: TryHackMe
+- **Exploitation Type**: Web Application + Privilege Escalation
+
+## Methodology
+
+### 1. Reconnaissance and Enumeration
+
+#### Initial Nmap Scan
+
+The penetration test began with a standard nmap scan to identify open ports and running services.
+
+![Initial Nmap Scan](Pasted%20image%2020250806203408.png)
+
+#### Service Version Detection
+
+Following the initial scan, a more detailed service enumeration was performed to identify specific versions and potential vulnerabilities.
+
+![Service Version Scan](Pasted%20image%2020250806203758.png)
+
+#### Web Application Discovery
+
+Initial web application reconnaissance revealed a basic web interface.
+
+![Web Interface](Pasted%20image%2020250806203652.png)
+
+### 2. Directory Enumeration
+
+Gobuster was utilized for directory discovery while service scans were running in parallel.
+
+![Gobuster Results](Pasted%20image%2020250806212549.png)
+
+Key directories discovered:
+- `/panel` - File upload functionality
+- `/uploads` - File storage location
+
+### 3. Vulnerability Assessment
+
+#### Service Vulnerability Scan
+
+A comprehensive vulnerability scan was performed to identify outdated services or known CVEs.
+
+![Vulnerability Scan](Pasted%20image%2020250806212418.png)
+
+#### Web Application Analysis
+
+Two critical endpoints were identified:
+
+**Panel Directory** - File Upload Interface:
+![Panel Interface](Pasted%20image%2020250806212758.png)
+
+**Uploads Directory** - File Access Point:
+![Uploads Directory](Pasted%20image%2020250806212845.png)
+
+*Note: Screenshots were captured after successful exploitation*
+
+## Exploitation Process
+
+### 4. File Upload Bypass
+
+Based on TryHackMe hints, the attack vector involved PHP reverse shell upload with file sanitization bypass.
+
+![TryHackMe Hint](Pasted%20image%2020250806213258.png)
+
+#### Reverse Shell Generation
+
+Multiple PHP reverse shells were tested using the online generator at [RevShells.com](https://www.revshells.com/).
+
+**Successful Payload**: The second PHP reverse shell from PentestMonkey successfully bypassed upload restrictions.
+
+#### Initial Access
+
+A netcat listener was established to catch the reverse shell connection, providing initial system access with limited privileges.
+
+### 5. Privilege Escalation
+
+#### SUID Binary Discovery
+
+Following the room's hint about SUID binaries, enumeration revealed potential escalation vectors.
+
+![SUID Hint](Pasted%20image%2020250806213741.png)
+
+![SUID Binaries](Pasted%20image%2020250806213940.png)
+
+#### GTFOBins Research
+
+Research using [GTFOBins](https://gtfobins.github.io/) identified Python as a viable SUID escalation method.
+
+![GTFOBins Python](Pasted%20image%2020250806214132.png)
+
+#### Shell Stabilization
+
+Initial attempts with standard Python SUID exploitation failed. Shell stabilization was achieved using:
+
+```bash
 python3 -c 'import pty; pty.spawn("/bin/bash")'
-but this is not a root shell inside the shell generated by this i ran th one from the websit to get root shell 
 ```
+
+#### Root Access
+
+Within the stabilized shell, the following command successfully escalated to root privileges:
+
+```bash
 ./python -c 'import os; os.execl("/bin/sh", "sh", "-p")'
 ```
-![[Pasted image 20250806215055.png]]
+
+![Root Shell Achievement](Pasted%20image%2020250806215055.png)
+
+## Attack Chain Summary
+
+1. **Reconnaissance**: Port scanning and service enumeration
+2. **Discovery**: Directory brute-forcing revealed upload/panel functionality
+3. **Exploitation**: PHP reverse shell upload bypassing file restrictions
+4. **Access**: Initial shell with limited privileges
+5. **Escalation**: SUID Python binary exploitation for root access
+
+## Key Findings
+
+### Vulnerabilities Identified
+
+1. **Inadequate File Upload Validation**: The panel directory allows malicious file uploads
+2. **Accessible Upload Directory**: Uploaded files are directly accessible via web interface
+3. **SUID Binary Misconfiguration**: Python binary with SUID bit enables privilege escalation
+
+
+## Tools Used
+
+- **Nmap**: Network reconnaissance and service enumeration
+- **Gobuster**: Directory and file discovery
+- **RevShells.com**: Reverse shell payload generation
+- **Netcat**: Reverse shell listener
+- **GTFOBins**: SUID binary exploitation research
+
