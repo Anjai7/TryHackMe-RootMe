@@ -17,12 +17,18 @@ This report documents the complete penetration testing process of target system 
 #### Initial Nmap Scan
 
 The penetration test began with a standard nmap scan to identify open ports and running services.
+```bash
+nmap 10.201.64.74
+```
 
 ![Initial Nmap Scan](Pasted%20image%2020250806203408.png)
 
 #### Service Version Detection
 
 Following the initial scan, a more detailed service enumeration was performed to identify specific versions and potential vulnerabilities.
+```bash
+nmap -sV 10.201.64.74
+```
 
 ![Service Version Scan](Pasted%20image%2020250806203758.png)
 
@@ -35,6 +41,10 @@ Initial web application reconnaissance revealed a basic web interface.
 ### 2. Directory Enumeration
 
 Gobuster was utilized for directory discovery while service scans were running in parallel.
+```bash
+gobuster dir -u http://10.201.64.74/ \
+  -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-small.txt 
+```
 
 ![Gobuster Results](Pasted%20image%2020250806212549.png)
 
@@ -47,6 +57,9 @@ Key directories discovered:
 #### Service Vulnerability Scan
 
 A comprehensive vulnerability scan was performed to identify outdated services or known CVEs.
+```bash
+nmap --script vuln 10.201.64.74
+```
 
 ![Vulnerability Scan](Pasted%20image%2020250806212418.png)
 
